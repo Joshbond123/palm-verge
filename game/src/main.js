@@ -261,6 +261,10 @@ function respawn() {
   player.health = 100;
   if (game.inCar) { game.inCar.driver = null; game.inCar = null; }
   game.screen = 'play';
+  game.endKind = null;
+  game.damageFlash = 0;
+  game.lastDamage = game.time;
+  player.mesh.visible = true;
   hud.setEndVisible(false);
   hud.setHudVisible(true);
   hud.showToast('Back on the street.', 3);
@@ -868,6 +872,7 @@ if (params.get('test') === '1') {
       scene.add(car.mesh); parkedCars.push(car); return { x: car.x, z: car.z };
     },
     grantAmmo: (n) => { game.ammo = n; },
+    damage: (n) => { damagePlayer(n, false); return window.__pv.state(); },
     save: () => saveGame(serialize()),
     load: () => loadGame(),
     serialize: () => serialize(),

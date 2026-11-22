@@ -67,8 +67,10 @@ export function createHud(root) {
   }
 
   const pause = el('div', 'menu pause-screen');
-  el('div', 'menu-title', pause).textContent = 'PAUSED';
-  const pauseButtons = el('div', 'buttons', pause);
+  const pauseCard = el('div', 'menu-card', pause);
+  el('div', 'menu-title', pauseCard).textContent = 'PAUSED';
+  el('div', 'menu-text', pauseCard).textContent = 'Verge City is waiting.';
+  const pauseButtons = el('div', 'buttons', pauseCard);
   const resumeBtn = el('button', 'btn primary', pauseButtons);
   resumeBtn.textContent = 'Resume';
   const saveBtn = el('button', 'btn', pauseButtons);
@@ -77,14 +79,31 @@ export function createHud(root) {
   quitBtn.textContent = 'Quit to title';
 
   const end = el('div', 'menu end-screen');
-  const endTitle = el('div', 'menu-title', end);
-  const endText = el('div', 'menu-text', end);
-  const endButtons = el('div', 'buttons', end);
+  const endCard = el('div', 'menu-card', end);
+  const endTitle = el('div', 'menu-title', endCard);
+  const endText = el('div', 'menu-text', endCard);
+  const endButtons = el('div', 'buttons', endCard);
   const respawnBtn = el('button', 'btn primary', endButtons);
   respawnBtn.textContent = 'Respawn';
 
   let toastTimer = 0;
   let briefingTimer = 0;
+  // When the HUD chrome is hidden (paused, menus), update() must not re-show it.
+  let chromeVisible = true;
+
+  /** Show or hide the in-game HUD (health, minimap, prompts) without touching
+   * the menus, which are children of the same container. */
+  function setChromeVisible(v) {
+    chromeVisible = v;
+    const display = v ? '' : 'none';
+    topLeft.style.display = display;
+    objectiveBox.style.display = display;
+    minimap.style.display = display;
+    speedBox.style.display = display;
+    crosshair.style.display = display;
+    briefing.style.display = display;
+    interactHint.style.display = display;
+  }
 
   function showToast(text, seconds = 3) {
     toast.textContent = text;
@@ -168,11 +187,11 @@ export function createHud(root) {
     objectiveTitle.textContent = state.missionTitle;
     objectiveText.textContent = state.objective;
     timerText.textContent = state.timer > 0 ? `⏱ ${Math.ceil(state.timer)}s` : '';
-    speedBox.style.display = state.inCar ? 'block' : 'none';
+    if (chromeVisible) speedBox.style.display = state.inCar ? 'block' : 'none';
     speedText.textContent = String(Math.round(Math.abs(state.speed) * 3.6));
-    crosshair.style.display = state.inCar ? 'none' : 'block';
+    if (chromeVisible) crosshair.style.display = state.inCar ? 'none' : 'block';
     interactHint.textContent = state.hint || '';
-    interactHint.style.display = state.hint ? 'block' : 'none';
+    if (chromeVisible) interactHint.style.display = state.hint ? 'block' : 'none';
     vignette.style.opacity = state.damageFlash > 0 ? String(Math.min(0.55, state.damageFlash)) : '0';
     drawMinimap(state);
     if (toastTimer > 0) {
@@ -195,12 +214,16 @@ export function createHud(root) {
     },
     showBriefing,
     setTitleVisible(v) { title.style.display = v ? 'flex' : 'none'; },
-    setPauseVisible(v) { pause.style.display = v ? 'flex' : 'none'; },
+    setPauseVisible(v) {
+      pause.style.display = v ? 'flex' : 'none';
+      setChromeVisible(!v);
+    },
     setEndVisible(v, heading, text) {
       end.style.display = v ? 'flex' : 'none';
       if (v) { endTitle.textContent = heading; endText.textContent = text; }
+      setChromeVisible(!v);
     },
-    setHudVisible(v) { hud.style.display = v ? 'block' : 'none'; },
+    setHudVisible(v) { hud.style.display = v ? 'block' : 'none'; setChromeVisible(v); },
     onStart: (fn) => startBtn.addEventListener('click', fn),
     onContinue: (fn) => continueBtn.addEventListener('click', fn),
     onResume: (fn) => resumeBtn.addEventListener('click', fn),
