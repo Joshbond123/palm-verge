@@ -12,7 +12,7 @@ Everything in this file is factual; nothing here was simulated or assumed.
 | Game title | Palm Verge — Neon Heat |
 | Repository | https://github.com/Joshbond123/palm-verge (public) |
 | Default branch | `main` |
-| Commit to enter | `740d5463f9f41f4cbc541937fc409044d7b8c1b6` (full sha: see `git rev-parse main`) |
+| Commit to enter | `cb4b07adec8f68abaf2158f2d610b80d2a26ed25` (full sha: see `git rev-parse main`) |
 | License | MIT, detects as `MIT` through the GitHub license API |
 | Entry point | `game/index.html` (offline; ES modules, no network, no build step) |
 | Competition build | `node main.ts` writes `game/`, `screenshots/` and `dossier.json` to `/output` (or `$MAKEFUN_OUTPUT_DIR`); byte-identical across runs |
