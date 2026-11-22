@@ -2,6 +2,6 @@
   "competition": "gta6-01",
   "title": "Palm Verge — Neon Heat",
   "repo_url": "https://github.com/Joshbond123/palm-verge",
-  "commit_sha": "40cf2519145cba783c74bf58d9aa2404963451af",
+  "commit_sha": "740d5463f9f41f4cbc541937fc409044d7b8c1b6",
   "entry_message": "Palm Verge — Neon Heat is an original open-world crime game that runs offline in desktop Chrome. Verge City is a seeded neon island: 49 blocks of towers with tiled facades and lit shopfronts, palms, lamp posts, a landmark glass tower, a marina with docks and boats, and a neon arch over the main avenue. You play Rook, a new wheelman for the Neon Syndicate: walk, sprint and jump, steal cars, fight with fists and a pistol, and work a six-job story from a first meeting at the marina to an armoured-truck score. It has arcade driving with damage and repair, grid traffic AI, pedestrians who flee gunfire, a five-star wanted system with chasing cruisers, a HUD with health, cash, wanted stars, clock and live minimap, shops, save/continue, a day/night cycle with golden hour and shadow mapping, and an original Web Audio soundtrack. Everything is generated from one seed, screenshots come from the game's own deterministic staging, and the whole thing is plain ES modules with no build step and no external requests. Tested headlessly: fourteen gameplay checks and a fifteen-step playthrough of all six missions pass with no console errors."
 }

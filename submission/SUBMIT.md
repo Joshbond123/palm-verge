@@ -27,7 +27,7 @@ node cli/makefun.mjs recordings --competition gta6-01
 node cli/makefun.mjs submit --competition gta6-01 \
   --recording <recording-id> \
   --repo-url https://github.com/Joshbond123/palm-verge \
-  --commit 40cf2519145cba783c74bf58d9aa2404963451af \
+  --commit 740d5463f9f41f4cbc541937fc409044d7b8c1b6 \
   --title "Palm Verge — Neon Heat" \
   --keypair ~/makefun-keypair.json \
   --repo ~/palm-verge
