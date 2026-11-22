@@ -1,79 +1,152 @@
-// The screenshot scenes behind ?shot=start|play|end. Each one plays the real rules forward from a
-// fresh world for a fixed number of steps, steered by a simple autopilot (look ahead each way the
-// paddle could move, keep clear of blocks, chase the lowest coin when that is safe), so the frame
-// is what a short game really looks like and the same seed always gives the same frame.
-import { FIELD, PLAYER, STEP } from './config.js';
-import { EVENT_OVER, KIND_BLOCK } from './world.js';
-import { SCREEN_OVER, SCREEN_PLAY, SCREEN_TITLE } from './render.js';
+// Screenshot scenes behind ?shot=start|play|drive|mission (with &seed=N).
+// Each one stages the real game — the same city, traffic, pedestrians, HUD and
+// renderer a player sees — at a chosen moment, then paints the frame twice and
+// sets window.__shotReady for the capture. Same seed, same frame.
 
-const START_SECONDS = 5;
-const PLAY_SECONDS = 26;
-const END_LIMIT_SECONDS = 600;
-/**
- * How far ahead, in seconds, the autopilot checks each way it could move: the play scene's pilot
- * looks well ahead and keeps all its lives; the end scene's looks only a moment ahead, so it is
- * caught out once the blocks speed up, as a hurried player is.
- */
-const HORIZON_PLAY = 0.7;
-const HORIZON_END = 0.25;
-const SAMPLE = 1 / 30;
-const DIRECTIONS = [0, -1, 1];
-/** Extra room, each side, it keeps between the paddle and a block. */
-const MARGIN = 10;
+import { createCar } from './vehicles.js';
+import { createRandom } from './random.js';
+import { animatePerson } from './actors.js';
 
-/** Seconds until moving in `direction` (-1, 0, 1) runs the paddle into a block; Infinity when it never does. */
-function timeToHit(state, direction, horizon) {
-  const player = state.player;
-  for (let t = SAMPLE; t <= horizon; t += SAMPLE) {
-    const x = Math.min(FIELD.width - player.width, Math.max(0, player.x + direction * PLAYER.speed * t));
-    for (let index = 0; index < state.items.length; index += 1) {
-      const item = state.items[index];
-      if (!item.active || item.kind !== KIND_BLOCK) continue;
-      const y = item.y + item.speed * t;
-      if (y + item.height > player.y && y < player.y + player.height && item.x < x + player.width + MARGIN && item.x + item.width > x - MARGIN) return t;
+const SETTLE_STEPS = 60;
+
+export function stageShot(name, ctx, opts = {}) {
+  const { game, player, missions, city, hud, peds, step, updateCamera, hudState, renderer, scene, camera } = ctx;
+  const shotRandom = createRandom(7);
+
+  // Late golden hour: warm sun, neon already on, sky still bright.
+  game.clock = 17.6;
+  game.time = 12;
+  game.health = 88;
+  game.money = 1250;
+  game.ammo = 9;
+  game.wanted = 0;
+  game.inCar = null;
+
+  if (name === 'start') {
+    game.screen = 'title';
+    hud.setTitleVisible(true);
+    hud.setHudVisible(false);
+  } else {
+    game.screen = 'play';
+    hud.setTitleVisible(false);
+    hud.setHudVisible(true);
+    game.missionCar = null;
+    missions.restore(null);
+    ctx.startCurrentMission();
+  }
+
+  // QA mode: ?shot=free&x=&z=&yaw=&pitch=&hour=&wanted= frames any spot in the
+  // city so staging can be checked without a browser session.
+  if (name === 'free' && opts.x !== undefined) {
+    player.x = opts.x;
+    player.z = opts.z;
+    player.heading = opts.yaw ?? 0;
+    player.speed = 2.4;
+    game.camYaw = opts.yaw ?? 0;
+    game.camPitch = opts.pitch ?? 0.26;
+    if (opts.hour !== undefined) game.clock = opts.hour;
+    if (opts.wanted !== undefined) { game.wanted = opts.wanted; ctx.spawnPolice(); }
+  }
+
+  if (name === 'play') {
+    // Sidewalk on the main avenue: palms, shopfronts, traffic and the tower
+    // ahead. Framed from the street side so the lead character reads clearly.
+    player.x = 4.5;
+    player.z = -84;
+    player.heading = -0.55;
+    player.y = 0.02;
+    player.speed = 2.6; // mid-stride, so the walk cycle is engaged
+    game.camYaw = -0.55;
+    game.camPitch = 0.22;
+    game.clock = 17.5;
+    game.health = 88;
+    game.money = 1250;
+    // A couple of pedestrians in frame for life.
+    if (peds && peds.peds.length > 4) {
+      peds.peds[0].x = player.x + 3.5;
+      peds.peds[0].z = player.z - 4;
+      peds.peds[0].heading = 2.2;
+      peds.peds[1].x = player.x - 5;
+      peds.peds[1].z = player.z - 7;
+      peds.peds[1].heading = 0.4;
+      peds.peds[2].x = player.x + 8;
+      peds.peds[2].z = player.z - 9;
     }
   }
-  return Infinity;
-}
 
-/** Of the safe ways to move, the one toward the lowest coin (or the centre); else the one that is hit last. */
-function autopilot(state, horizon) {
-  const player = state.player;
-  let coin = null;
-  for (let index = 0; index < state.items.length; index += 1) {
-    const item = state.items[index];
-    if (item.active && item.kind !== KIND_BLOCK && (coin === null || item.y > coin.y)) coin = item;
-  }
-  const target = coin === null ? FIELD.width / 2 : coin.x + coin.width / 2;
-  const centre = player.x + player.width / 2;
-  const wanted = target > centre + 8 ? 1 : target < centre - 8 ? -1 : 0;
-  let best = wanted;
-  let bestTime = timeToHit(state, wanted, horizon);
-  for (let index = 0; index < DIRECTIONS.length && bestTime !== Infinity; index += 1) {
-    const time = timeToHit(state, DIRECTIONS[index], horizon);
-    if (time > bestTime) {
-      bestTime = time;
-      best = DIRECTIONS[index];
+  if (name === 'drive') {
+    // Sport car on the main avenue, cruiser closing behind, two wanted stars.
+    const road = city.centres[3];
+    const car = createCar('sport', -34, road - 3.4, Math.PI / 2, shotRandom);
+    scene.add(car.mesh);
+    car.speed = 21;
+    game.inCar = car;
+    player.x = car.x;
+    player.z = car.z;
+    game.wanted = 2;
+    ctx.spawnPolice();
+    if (ctx.policeCars.length > 0) {
+      const cop = ctx.policeCars[0];
+      cop.x = car.x - 13;
+      cop.z = car.z + 1.2;
+      cop.heading = Math.PI / 2;
+      cop.speed = 16;
+      cop.mesh.position.set(cop.x, 0, cop.z);
     }
+    if (ctx.policeCars.length > 1) {
+      const cop2 = ctx.policeCars[1];
+      cop2.x = car.x - 30;
+      cop2.z = car.z - 1;
+      cop2.heading = Math.PI / 2;
+      cop2.speed = 15;
+    }
+    game.money = 4820;
   }
-  return best;
-}
 
-/**
- * Set `world` to the named scene (start, play or end; any other name is start) and return the
- * screen to draw over it and the best score to show.
- */
-export function stageShot(name, world) {
-  world.reset();
-  if (name !== 'play' && name !== 'end') {
-    for (let index = 0; index < START_SECONDS / STEP; index += 1) world.step(STEP, 0, true);
-    return { screen: SCREEN_TITLE, best: 0 };
+  if (name === 'mission') {
+    // Harbour edge at dusk: moored boats, the landmark tower behind the palms,
+    // objective marker lit and a briefing on screen.
+    player.x = city.places.marina.x + 26;
+    player.z = city.places.marina.z - 26;
+    player.heading = -0.85;
+    player.speed = 2.4;
+    game.camYaw = -0.85;
+    game.camPitch = 0.2;
+    game.clock = 19.3;
+    game.health = 64;
+    game.money = 4820;
+    game.wanted = 1;
+    hud.showBriefing('First Light — Marisol at the marina',
+      'Marisol: "Rook. Verge City eats tourists for breakfast. The Syndicate needs a driver who keeps their head. South pier, ten minutes."', 30);
   }
-  const limit = name === 'end' ? END_LIMIT_SECONDS : PLAY_SECONDS;
-  const horizon = name === 'end' ? HORIZON_END : HORIZON_PLAY;
-  for (let index = 0; index < limit / STEP; index += 1) {
-    if (world.step(STEP, autopilot(world.state, horizon), false) & EVENT_OVER) break;
+
+  // Settle the world so traffic has moved and crowds are walking, then keep the
+  // staged player exactly where we put them.
+  const staged = { x: player.x, z: player.z, heading: player.heading, speed: player.speed };
+  for (let i = 0; i < SETTLE_STEPS; i += 1) {
+    step(1 / 60);
+    player.x = staged.x;
+    player.z = staged.z;
+    player.heading = staged.heading;
   }
-  const over = world.state.lives === 0;
-  return { screen: over ? SCREEN_OVER : SCREEN_PLAY, best: world.state.score };
+  player.speed = staged.speed;
+  animatePerson(player, 0.016);
+  player.mesh.position.set(player.x, 0, player.z);
+  updateCamera(1);
+  hud.update(hudState(), 0.016);
+  camera.position.set(
+    player.x - Math.sin(game.camYaw) * Math.cos(game.camPitch) * (game.inCar ? 10.5 : 6.6),
+    (game.inCar ? 4.0 : 2.5) + Math.sin(game.camPitch) * 3,
+    player.z - Math.cos(game.camYaw) * Math.cos(game.camPitch) * (game.inCar ? 10.5 : 6.6),
+  );
+
+  let painted = 0;
+  function paint() {
+    updateCamera(0.016);
+    renderer.render(scene, camera);
+    painted += 1;
+    if (painted < 2) requestAnimationFrame(paint);
+    else window.__shotReady = true;
+  }
+  requestAnimationFrame(paint);
 }
