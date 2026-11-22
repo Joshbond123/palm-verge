@@ -67,6 +67,9 @@ scene.add(sun);
 scene.add(sun.target);
 const fill = new THREE.AmbientLight(0x8fa8d8, 0.35);
 scene.add(fill);
+const rim = new THREE.DirectionalLight(0xffd9b0, 0.55);
+rim.position.set(-60, 45, -80);
+scene.add(rim);
 
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
@@ -666,13 +669,20 @@ function updateSky() {
   const duskness = Math.max(0, 1 - Math.abs(h - 18.6) / 2.4) * 0.85
     + Math.max(0, 1 - Math.abs(h - 6.6) / 2.0) * 0.55;
   const sky = new THREE.Color(PALETTE.skyNight).lerp(new THREE.Color(PALETTE.skyDay), dayness);
-  sky.lerp(new THREE.Color(PALETTE.skyDusk), Math.min(0.75, duskness));
+  sky.lerp(new THREE.Color(PALETTE.skyDusk), Math.min(0.9, duskness * 1.15));
   scene.background.copy(sky);
   scene.fog.color.copy(sky).lerp(new THREE.Color(PALETTE.fogNight), 1 - dayness);
   // Night is dim and blue, never black: you can still read the streets.
   hemi.intensity = 0.55 + dayness * 0.7;
   sun.intensity = 0.22 + dayness * 1.95;
   fill.intensity = 0.42 - dayness * 0.12;
+  // Water mirrors the sky, so the bay picks up the sunset instead of going flat.
+  if (city.water) {
+    city.water.material.color.copy(sky).lerp(new THREE.Color(PALETTE.water), 0.4);
+    // The glow is the sun's reflection: strongest at dusk, gone by night.
+    city.waterGlow.material.opacity = duskness * 0.42 + dayness * 0.06;
+    city.waterGlow.material.color.copy(new THREE.Color(PALETTE.skyDusk)).lerp(new THREE.Color(0xfff1c9), dayness * 0.5);
+  }
   // Golden hour warms the bounce light and the sun itself.
   const warmth = Math.min(1, duskness);
   hemi.color.setHex(0xcfe8ff).lerp(new THREE.Color(0xffc9a0), warmth * 0.85);

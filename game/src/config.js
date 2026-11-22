@@ -69,14 +69,14 @@ export const SHOP = { ammoPrice: 40, healthPrice: 60, repairPrice: 80 };
 
 export const PALETTE = {
   skyDay: 0x7ec8e3,
-  skyDusk: 0xff9a5c,
+  skyDusk: 0xff7a3c,
   skyNight: 0x0b1026,
   fogDay: 0xa8d8ea,
   fogNight: 0x141a33,
   road: 0x2b2f36,
   roadLine: 0xf2c94c,
   sidewalk: 0x8d9299,
-  water: 0x1b6f8e,
+  water: 0x1e5f7a,
   palmTrunk: 0x8a6a4a,
   palmLeaf: 0x2fae5f,
   buildingA: 0x3a4a63,

@@ -20,6 +20,13 @@ export function createPersonMesh(shirtColor, skinColor) {
   const head = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.36, 0.34), skin);
   head.position.y = 1.62;
   group.add(head);
+  // Face: eyes and a brow, so characters have a front from any camera angle.
+  const eyeMat = new THREE.MeshBasicMaterial({ color: 0x11131a });
+  for (const side of [-1, 1]) {
+    const eye = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.05, 0.02), eyeMat);
+    eye.position.set(side * 0.08, 1.66, 0.18);
+    group.add(eye);
+  }
   const cap = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.12, 0.4), pants);
   cap.position.y = 1.84;
   group.add(cap);

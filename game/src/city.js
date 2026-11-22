@@ -189,13 +189,27 @@ export function buildCity(scene, random) {
   ground.receiveShadow = true;
   scene.add(ground);
 
+  // Bay water: a lit surface plus a glossy mesh with a mirrored sun streak, so
+  // sunsets read across the bay instead of a flat blue slab.
   const water = new THREE.Mesh(
     new THREE.PlaneGeometry(CITY.size * 4, CITY.size * 4),
-    new THREE.MeshLambertMaterial({ color: PALETTE.water, transparent: true, opacity: 0.92 }),
+    new THREE.MeshPhongMaterial({
+      color: PALETTE.water, shininess: 90, specular: 0xffd9a8, transparent: true, opacity: 0.96,
+    }),
   );
   water.rotation.x = -Math.PI / 2;
   water.position.y = -0.6;
   scene.add(water);
+  const waterGlow = new THREE.Mesh(
+    new THREE.PlaneGeometry(CITY.size * 4, CITY.size * 4),
+    new THREE.MeshBasicMaterial({
+      color: 0xffb070, transparent: true, opacity: 0.16, depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    }),
+  );
+  waterGlow.rotation.x = -Math.PI / 2;
+  waterGlow.position.y = -0.55;
+  scene.add(waterGlow);
 
   // --- Buildings -------------------------------------------------------------
   const facadeMats = [
@@ -439,6 +453,8 @@ export function buildCity(scene, random) {
 
   return {
     colliders,
+    water,
+    waterGlow,
     centres,
     blockCentres,
     places: { marina, garage, hideout, plaza, tower: { x: centreBlock.x, z: centreBlock.z } },

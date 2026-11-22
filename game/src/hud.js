@@ -181,6 +181,11 @@ export function createHud(root) {
   return {
     update,
     showToast,
+    /** Hide any toast/briefing left over from a simulated run (used by shots). */
+    clearToasts() {
+      toast.classList.remove('show');
+      toastTimer = 0;
+    },
     showBriefing,
     setTitleVisible(v) { title.style.display = v ? 'flex' : 'none'; },
     setPauseVisible(v) { pause.style.display = v ? 'flex' : 'none'; },

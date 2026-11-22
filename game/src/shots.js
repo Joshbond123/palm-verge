@@ -106,13 +106,13 @@ export function stageShot(name, ctx, opts = {}) {
   if (name === 'mission') {
     // Harbour edge at dusk: moored boats, the landmark tower behind the palms,
     // objective marker lit and a briefing on screen.
-    player.x = city.places.marina.x + 26;
-    player.z = city.places.marina.z - 26;
-    player.heading = -0.85;
+    player.x = -110;
+    player.z = 160;
+    player.heading = -0.66;
     player.speed = 2.4;
-    game.camYaw = -0.85;
-    game.camPitch = 0.2;
-    game.clock = 19.3;
+    game.camYaw = -0.66;
+    game.camPitch = 0.18;
+    game.clock = 19.2;
     game.health = 64;
     game.money = 4820;
     game.wanted = 1;
@@ -134,6 +134,7 @@ export function stageShot(name, ctx, opts = {}) {
   player.mesh.position.set(player.x, 0, player.z);
   updateCamera(1);
   hud.update(hudState(), 0.016);
+  if (hud.clearToasts) hud.clearToasts();
   camera.position.set(
     player.x - Math.sin(game.camYaw) * Math.cos(game.camPitch) * (game.inCar ? 10.5 : 6.6),
     (game.inCar ? 4.0 : 2.5) + Math.sin(game.camPitch) * 3,
