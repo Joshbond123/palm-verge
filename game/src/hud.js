@@ -54,10 +54,17 @@ export function createHud(root) {
   startBtn.textContent = 'Start new story';
   const continueBtn = el('button', 'btn', titleButtons);
   continueBtn.textContent = 'Continue';
-  el('div', 'controls', title).innerHTML =
-    'WASD drive &amp; walk &nbsp;·&nbsp; Mouse look &nbsp;·&nbsp; Shift run &nbsp;·&nbsp; Space jump<br>' +
-    'E enter car / interact &nbsp;·&nbsp; F punch &nbsp;·&nbsp; Click shoot &nbsp;·&nbsp; R reload<br>' +
-    'Esc pause &nbsp;·&nbsp; M mute &nbsp;·&nbsp; Follow the gold marker. Lose the heat. Get paid.';
+  // Plain text only: the game never injects markup, so it is safe under a
+  // strict content security policy as well.
+  const controls = el('div', 'controls', title);
+  for (const line of [
+    'WASD drive & walk  ·  Mouse look  ·  Shift run  ·  Space jump',
+    'E enter car / interact  ·  F punch  ·  Click shoot  ·  R reload',
+    'Esc pause  ·  M mute  ·  Follow the gold marker. Lose the heat. Get paid.',
+  ]) {
+    const row = el('div', 'controls-row', controls);
+    row.textContent = line;
+  }
 
   const pause = el('div', 'menu pause-screen');
   el('div', 'menu-title', pause).textContent = 'PAUSED';

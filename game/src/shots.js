@@ -10,11 +10,12 @@ import { animatePerson } from './actors.js';
 const SETTLE_STEPS = 60;
 
 export function stageShot(name, ctx, opts = {}) {
-  const { game, player, missions, city, hud, peds, step, updateCamera, hudState, renderer, scene, camera } = ctx;
+  const { game, player, missions, city, hud, peds, step, updateCamera, updateSky, hudState, renderer, scene, camera } = ctx;
   const shotRandom = createRandom(7);
 
   // Late golden hour: warm sun, neon already on, sky still bright.
   game.clock = 17.6;
+  if (name === 'start') game.clock = 18.7;
   game.time = 12;
   game.health = 88;
   game.money = 1250;
@@ -130,6 +131,7 @@ export function stageShot(name, ctx, opts = {}) {
     player.heading = staged.heading;
   }
   player.speed = staged.speed;
+  updateSky();
   animatePerson(player, 0.016);
   player.mesh.position.set(player.x, 0, player.z);
   updateCamera(1);

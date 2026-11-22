@@ -297,41 +297,74 @@ export function buildCity(scene, random) {
   }
 
   // --- Landmark tower (centre block) -----------------------------------------
+  // The city's signature: a stepped glass tower with lit vertical fins, a neon
+  // crown, an observation band and an aircraft beacon. Built as a few boxes so
+  // it stays cheap while reading as architecture from across the island.
   const tower = new THREE.Group();
-  const towerBody = new THREE.Mesh(
-    buildingGeo,
-    new THREE.MeshLambertMaterial({ map: facadeTexture(random, '#3b4664', 0.5) }),
-  );
-  towerBody.scale.set(20, 78, 20);
-  towerBody.position.y = 39;
-  towerBody.castShadow = true;
-  towerBody.receiveShadow = true;
-  tower.add(towerBody);
+  const towerMat = new THREE.MeshLambertMaterial({ map: facadeTexture(random, '#4a5878', 0.62) });
+  const glassMat = new THREE.MeshLambertMaterial({ color: 0x1b2a44 });
+  const finMat = new THREE.MeshBasicMaterial({ color: 0x7fe8ff });
+
+  // Base podium, main shaft and upper setback.
+  const podium = new THREE.Mesh(tiledBox(30, 10, 30, 7.2, 6.4), towerMat);
+  podium.scale.set(30, 10, 30);
+  podium.position.y = 5;
+  podium.castShadow = true;
+  podium.receiveShadow = true;
+  tower.add(podium);
+
+  const shaft = new THREE.Mesh(tiledBox(20, 78, 20, 7.2, 6.4), towerMat);
+  shaft.scale.set(20, 78, 20);
+  shaft.position.y = 10 + 39;
+  shaft.castShadow = true;
+  shaft.receiveShadow = true;
+  tower.add(shaft);
+
+  const setback = new THREE.Mesh(tiledBox(13, 16, 13, 7.2, 6.4), towerMat);
+  setback.scale.set(13, 16, 13);
+  setback.position.y = 88 + 8;
+  setback.castShadow = true;
+  tower.add(setback);
+
+  // Vertical neon fins running the full height of the shaft, one per corner face.
+  const finGeo = new THREE.BoxGeometry(0.7, 78, 0.7);
+  for (const [fx, fz] of [[-10, -10], [10, -10], [-10, 10], [10, 10]]) {
+    const fin = new THREE.Mesh(finGeo, finMat);
+    fin.position.set(fx, 10 + 39, fz);
+    tower.add(fin);
+  }
+  // Observation band: a glazed ring near the top of the shaft.
+  const band = new THREE.Mesh(new THREE.BoxGeometry(22.4, 4.2, 22.4), glassMat);
+  band.position.y = 10 + 70;
+  tower.add(band);
+  const bandLight = new THREE.Mesh(new THREE.BoxGeometry(22.8, 0.7, 22.8), finMat);
+  bandLight.position.y = 10 + 72.4;
+  tower.add(bandLight);
+
   const spire = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.6, 2.2, 22, 8),
-    new THREE.MeshLambertMaterial({ color: 0x9fb4c8 }),
+    new THREE.CylinderGeometry(0.5, 2.0, 20, 8),
+    new THREE.MeshLambertMaterial({ color: 0xb9c6d6 }),
   );
-  spire.position.y = 89;
+  spire.position.y = 104 + 10;
   tower.add(spire);
   const beacon = new THREE.Mesh(
     new THREE.SphereGeometry(1.6, 10, 8),
     new THREE.MeshBasicMaterial({ color: 0xff3d3d }),
   );
-  beacon.position.y = 101;
+  beacon.position.y = 124;
   tower.add(beacon);
-  const crown = new THREE.Mesh(
-    buildingGeo,
-    new THREE.MeshBasicMaterial({ color: PALETTE.neonPink }),
-  );
-  crown.scale.set(21, 2, 21);
-  crown.position.y = 79;
+  // Neon crown around the setback, the city's brightest landmark at night.
+  const crown = new THREE.Mesh(buildingGeo, new THREE.MeshBasicMaterial({ color: PALETTE.neonPink }));
+  crown.scale.set(14.4, 1.6, 14.4);
+  crown.position.y = 104;
   tower.add(crown);
+
   const centreBlock = blockCentres[3 * CITY.blocks + 3];
   tower.position.set(centreBlock.x, 0, centreBlock.z);
   scene.add(tower);
   colliders.push({
-    minX: centreBlock.x - 10, maxX: centreBlock.x + 10,
-    minZ: centreBlock.z - 10, maxZ: centreBlock.z + 10,
+    minX: centreBlock.x - 15, maxX: centreBlock.x + 15,
+    minZ: centreBlock.z - 15, maxZ: centreBlock.z + 15,
   });
 
   // --- Marina (south edge): docks and moored boats ---------------------------

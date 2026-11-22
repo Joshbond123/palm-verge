@@ -657,8 +657,6 @@ function step(dt) {
   else if (nearestCar(4.5)) hint = 'E — enter car';
   game.hint = hint;
 
-  // Day/night.
-  updateSky();
 }
 
 function updateSky() {
@@ -701,9 +699,9 @@ function updateSky() {
 function updateCamera(dt) {
   if (game.screen === 'title') {
     // Slow orbit around the landmark tower behind the title screen.
-    const t = game.time * 0.08;
-    camera.position.set(Math.sin(t) * 92, 36, Math.cos(t) * 92);
-    camera.lookAt(city.places.tower.x, 24, city.places.tower.z);
+    const t = 1.15 + Math.sin(game.time * 0.05) * 0.35;
+    camera.position.set(Math.sin(t) * 132, 44, Math.cos(t) * 132);
+    camera.lookAt(city.places.tower.x - 34, 40, city.places.tower.z + 20);
     return;
   }
   const focus = game.inCar ?? player;
@@ -805,7 +803,7 @@ if (shot) {
   stageShot(shot, {
     game, player, missions, city, traffic, peds, enemies, policeCars,
     parkedCars, startCurrentMission, hud, sound, spawnPolice, addWanted,
-    step, updateCamera, hudState, renderer, scene, camera,
+    step, updateCamera, updateSky, hudState, renderer, scene, camera,
   }, { x: num('x'), z: num('z'), yaw: num('yaw'), pitch: num('pitch'), hour: num('hour'), wanted: num('wanted') });
 } else {
   hud.setTitleVisible(true);
@@ -822,6 +820,7 @@ if (shot) {
       accumulator -= 1 / 60;
     }
     city.update(game.time);
+    updateSky();
     updateCamera(frameDt);
     hud.update(hudState(), frameDt);
     renderer.render(scene, camera);
